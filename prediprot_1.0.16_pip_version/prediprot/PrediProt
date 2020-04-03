@@ -1,0 +1,270 @@
+#!/usr/bin/python3
+# Importing packages.
+import argparse
+import sys
+import warnings
+import os
+from prediprot.imports.prediprot_functions import *
+from prediprot.imports.prediprot_classes import *
+
+# Ignore the warnings from reading the pdb.
+if not sys.warnoptions:
+    warnings.simplefilter("ignore")
+
+##### READING FROM IMPUT #####
+argparser = argparse.ArgumentParser()
+argparser.add_argument("-p", "--inputpdb",
+                    dest = "inputpdb",
+                    action = "store",
+                    help = "Directory where PDB files are stored (required)",
+                           required=True)
+argparser.add_argument("-f", "--inputfasta",
+                    dest = "inputfasta",
+                    action = "store",
+                    help = "FASTA file used for complex building (required)",
+                           required=True)
+argparser.add_argument("-od", "--output_path",
+                    dest = "outputdir_path",
+                    action = "store",
+                    default = "",
+                    help = "Path where the directory with the results will be "
+                           "created")
+argparser.add_argument("-o", "--output",
+                    dest = "output",
+                    action = "store",
+                    default = "",
+                    help = "Name of the output directory and files")
+argparser.add_argument("-z", "--optimize",
+                    dest = "optimize",
+                    action = "store_true",
+                    default = False,
+                    help = "If used, resulting complexes will be optimized "
+                           "with Modeller")
+argparser.add_argument("-s", "--seed",
+                    dest = "seed",
+                    action = "store",
+                    default = None,
+                    help = "Seed used for every random operation, such as the "
+                           "order in which the subunits are added")
+argparser.add_argument("-m", "--models",
+                    dest = "models",
+                    action = "store",
+                    default = 1,
+                    help = "Number of models to be created")
+argparser.add_argument("-r", "--random",
+                    dest = "random_seed",
+                    action = "store_true",
+                    default = False,
+                    help = "If used, the initial structure in every new model "
+                           "created will be a random structure and not the "
+                           "most interacting one")
+argparser.add_argument("-c", "--clash_distance",
+                    dest = "clash_dist",
+                    action = "store",
+                    default = 0.5,
+                    help = "Distance when the algorithm considers a clash "
+                           "between atoms, in Angstroms. By default: 0.5")
+g = argparser.add_mutually_exclusive_group()
+g.add_argument('-sto', '--stoichiometry',
+                    dest = "sto",
+                    action = "store",
+                    default = False,
+                    help = "Specify the stoichiometry of the complex. The "
+                           "output PDBs will only contain those chains.")
+g.add_argument('-stoinfo', '--stoichiometry_info',
+                    dest = "stoinfo",
+                    action = "store_true",
+                    default = False,
+                    help = "If used, you will get the stoichiometry of the "
+                           "theoretical complex and then you will be asked "
+                           "for the stoichiometry you want in the output")
+
+args = argparser.parse_args()
+
+##### MAIN LOOP #####
+if __name__ == '__main__':
+    # Check if the output_path is correct:
+    try:
+        if args.outputdir_path!='':
+            if os.path.isdir(args.outputdir_path) == False:
+                raise output_path_not_exists()
+    except:
+        print(output_path_not_exists(args.outputdir_path))
+        sys.exit()
+    # Get the name of the fasta and check if it exists.
+    name_fasta = args.inputfasta.split("/")[-1]
+    try:
+        if os.path.isfile(args.inputfasta) == False:
+            raise fasta_not_exists()
+    except:
+        print(fasta_not_exists(name_fasta))
+        sys.exit()
+
+    # Check if the extension of the file correspond to a fasta file.
+    extensions = ["fa","fasta","fna","fsa","fas","mpfa","frn" ,"ffn" ,"faa"]
+    try:
+        if name_fasta.split(".")[-1] in extensions:
+            name_fasta = "".join(name_fasta.split(".")[:-1])
+        else:
+            raise not_fasta_file()
+    except:
+        print(not_fasta_file())
+        sys.exit()
+
+    # Default output name.
+    if args.output == '':
+        args.output = name_fasta + '_result'
+
+    # Handle if the clash distance is set out of range.
+    try:
+        if float(args.clash_dist) < 0.1 or float(args.clash_dist) > 1.0:
+            raise invalid_clash_dist()
+    except:
+        print(invalid_clash_dist(args.clash_dist))
+        sys.exit()
+
+    # Check if the directory which contains the PDBs exists.
+    directory = args.inputpdb
+    try:
+        if os.path.isdir(directory) == False:
+            raise directory_not_exists()
+    except:
+        print(directory_not_exists(directory))
+        sys.exit()
+
+    # Saves every PDB name that is found into a list.
+    pdb_list = []
+    for file in os.listdir(directory):
+        if file.endswith(".pdb"):
+            pdb_list.append(file.split(".")[0])
+    # If no PDBs are found, return an error.
+    try:
+        if len(pdb_list) == 0:
+            raise no_pdbs()
+    except:
+        print(no_pdbs())
+        sys.exit()
+
+    print('Managing the fasta file...')
+
+    # Store the fasta info in dictionaries.
+    fasta_dic, list_ID = get_dict_from_fasta(args)
+
+    # Get the unique subunits of the chain from the fasta file.
+    fasta_dic_unique_sorted, dic_repeated_sorted, unique_new_id = \
+    get_subunits_from_fasta(fasta_dic, list_ID)
+
+    # If information of the stoichiometry is requested by the user (-stoinfo)
+    # a fasta with the unique subunits is created, then the user can select a
+    # specific stoichiometry for the model.
+    if args.stoinfo:
+        args.sto = create_subunits_fasta(args, fasta_dic_unique_sorted,
+                                         dic_repeated_sorted, unique_new_id,
+                                         name_fasta)
+
+    # If the user selects an specific stoichiometry, the following function
+    # checks if the format of this input is correct.
+    if args.sto:
+        sto_dic = check_stoic(args)
+
+    # Each PDB containg 2 interacting chains is read, and the information is
+    # stored in multiple dictionaries.
+    print('Storing the information of the PDB files...')
+    id_structure_dict, id_chain_dict, chain_sequences, recover_id_from_fasta = \
+    read_and_store_pdbs(args, pdb_list, unique_new_id, fasta_dic_unique_sorted)
+
+    # Here we get a list with every interaction between the structures
+    # (a structure is each PDB with 2 interacting chains).
+    print('Finding interactions between the structures...')
+    interacting_structures = find_interactions(chain_sequences)
+
+    # If not random is selected, the first structure selected to build the
+    # complex from it will be the one with more interactions. The seed to
+    # replicate the experiment is created.
+    if not args.random_seed:
+        sorted_count_interactions = \
+        counting_interactions(interacting_structures, id_structure_dict)
+
+        starting_structure_id_list, list_of_seeds = \
+        preparing_randomization(args, id_structure_dict, sorted_count_interactions)
+    else:
+        starting_structure_id_list, list_of_seeds = \
+        preparing_randomization(args, id_structure_dict)
+
+    # Output path creation.
+    if args.outputdir_path == '':
+        path = "./" + args.output
+    else:
+        if str(args.outputdir_path)[-1] == "/":
+            path = args.outputdir_path + args.output
+        else:
+            path = args.outputdir_path + "/" + args.output
+
+    # If the folder does not exist, create one.
+    if not os.path.isdir(path):
+        os.mkdir(path)
+
+    # Check if the user has Modeller installed.
+    modeller = False
+    try:
+        from modeller import *
+        from modeller.scripts import complete_pdb
+        from modeller.optimizers import conjugate_gradients, \
+                                        molecular_dynamics, actions
+    except ImportError:
+        print("No modeller installed. The energy of the model will not appear "
+              "in the log file. The model cannot be optimized.")
+    else:
+        modeller = True
+
+    # Creating the log.
+    log = open(path + "/" + args.output + "_log.txt", 'w')
+    if modeller == True:
+        print("{:<35}\t{:>20}\t{:<}".format('File name','Energy of the model',
+                                            'Added subunits'), file = log)
+    else:
+        print("{:<35}\t{:<}".format('File name','Added subunits'), file = log)
+
+    # Here the complexes are builded and stored. The number of iterations of the
+    # following loop will depend on the -m parameter.
+    print('Starting complexbuilder')
+    for index, new_starting_structure in enumerate(starting_structure_id_list):
+        # If the user specifies a stoichiometry the resulting complex will
+        # only have the subunits specified by the user, if posible.
+        if args.sto:
+            complex_builder(modeller, path, log, args, new_starting_structure,
+                            index, id_chain_dict, id_structure_dict,
+                            interacting_structures, pdb_list, list_of_seeds,
+                            recover_id_from_fasta, sto_dic)
+        else:
+            complex_builder(modeller, path, log, args, new_starting_structure,
+                            index, id_chain_dict, id_structure_dict,
+                            interacting_structures, pdb_list, list_of_seeds,
+                            recover_id_from_fasta)
+
+    # Info of the experiment is stored in the log
+    print("\nThe following fasta has been used: {}".format(args.inputfasta.split('/')[-1]),
+          file = log)
+    if args.seed:
+        print("\nThe following seed has been used to get this result: {}".format(args.seed),
+          file = log)
+    else:
+        print("\nNo specific seed has been used to get this result",
+              file = log)
+
+    if args.sto:
+        print("\nThe following stoichiometry has been selected to get this result: {}".format(args.sto),
+              file=log)
+    else:
+        print("\nNo specific stoichiometry has been selected to get this result ",
+              file=log)
+
+    if args.random_seed:
+        print("\nThe initial interactions have been selected randomly ",
+              file=log)
+    else:
+        print("\nThe models have been constructed from the most interacting structure",
+              file=log)
+    log.close()
+
+    print("Finished!")

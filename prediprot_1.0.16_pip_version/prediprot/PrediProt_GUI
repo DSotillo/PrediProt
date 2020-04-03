@@ -1,0 +1,525 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+from tkinter import *
+from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askdirectory
+from tkinter.filedialog import asksaveasfile
+import os
+import webbrowser
+
+##### PATH VARIABLES
+fasta_file = ""
+pdb_dir = ""
+output_directory = ""
+#####
+
+# CREATE WINDOW
+window = Tk()
+
+window.title("PrediProt - GUI version")
+window.config(padx="10",pady="10")
+
+## MAIN FRAME
+main = LabelFrame(window, text="Enter your inputs", padx="10", pady="10")
+main.columnconfigure((0,1),weight=1, pad=5)
+
+def get_relpath(p):
+    curr = os.getcwd()
+    path = p
+    cpath = os.path.commonpath([curr,path])
+    if curr == path:
+        rel = "./"
+    else:
+        if curr == cpath:
+        # if current is common, path is sibling
+            rel = './' + path.replace(curr,'').lstrip('/')
+        else:
+        # count how many directories up and fill the rest
+            updir = curr.replace(cpath,'')
+            updir_times = updir.count('/')
+            rel = '../' * updir_times + path.replace(cpath,'').lstrip('/')
+
+    return rel
+
+def input_fasta():
+    global fasta_file
+    fasta_file = askopenfilename(title="Your FASTA file", filetypes=[("FASTA file",".fasta .fa .fna .fsa .fas .mpfa .frn .ffn .faa")])
+    if not ("/" or "\\") in fasta_file:
+        fasta_label.configure(text="Upload corresponding FASTA file")
+    else:
+        relative_path = get_relpath(fasta_file)
+        fasta_label.configure(text=relative_path)
+    check_run()
+
+def input_pdb():
+    global pdb_dir
+    pdb_dir = askdirectory(title="Directory containing your PDBs")
+    if not ("/" or "\\") in pdb_dir:
+        pdb_label.configure(text="Choose directory with PDB files")
+    else:
+        relative_path = get_relpath(pdb_dir)
+        pdb_label.configure(text=relative_path)
+    check_run()
+
+def output_dir():
+    global output_directory
+    output_directory = askdirectory(title="Directory where output folder will be created")
+    if not ("/" or "\\") in output_directory:
+        out_dir_label.configure(text="Output directory (Optional)")
+    else:
+        relative_path = get_relpath(output_directory)
+        out_dir_label.configure(text=relative_path)
+
+def check_run():
+    if fasta_label.cget("text") != 'Upload corresponding FASTA file' and pdb_label.cget("text") != 'Choose directory with PDB files':
+        run['state'] = 'normal'
+    else:
+        run['state'] = 'disabled'
+
+def reset():
+    # FASTA
+    fasta_label.configure(text="Upload corresponding FASTA file")
+
+    # PDB
+    pdb_label.configure(text="Choose directory with PDB files")
+
+    # OUTPUT
+    out_dir_label.configure(text="Output directory (Optional)")
+    output_name_var.set("")
+
+    # STOICHIOMETRY
+    sto_var.set("NO")
+    sto_entry_var.set("")
+    sto_entry.config(state='disabled')
+
+    # MODELS
+    nmod.set("1")
+
+    # RANDOM
+    rd.set("0")
+
+    # OPTMIZE
+    opt_var.set("0")
+
+    # CLASH DISTANCE
+    clash_var.set("0.5")
+
+    # SEED
+    seed_var.set("")
+
+    # RUN BUTTON
+    run['state'] = 'disabled'
+
+# EXECUTION FUNCTION
+def run_program(fasta,pdb,out,odir,sto,sto_var,opt,random,seed,models,cdist):
+
+    # LOCKING INPUTS
+
+    # FASTA
+    upload_fasta['state'] = 'disabled'
+
+    # PDB
+    upload_pdb['state'] = 'disabled'
+
+    # OUTPUT
+    out_dir_button['state'] = 'disabled'
+    output_name_entry.config(state='normal')
+
+    # RUN BUTTON
+    run['state'] = 'disabled'
+
+    # RESET BUTTON
+    reset['state'] = 'disabled'
+
+    # SAVE/LOAD
+    save_param['state'] = 'disabled'
+    load_param['state'] = 'disabled'
+
+    # STOICHIOMETRY
+    sto_no['state'] = 'disabled'
+    sto_yes['state'] = 'disabled'
+    sto_info['state'] = 'disabled'
+    sto_entry.config(state='disabled')
+
+    # MODELS
+    num_models['state'] = 'disabled'
+
+    # RANDOM
+    random_box.config(state='disabled')
+
+    # OPTMIZE
+    opt_box['state'] = 'disabled'
+
+    # CLASH DISTANCE
+    clash_dist['state'] = 'disabled'
+
+    # SEED
+    seed_entry['state'] = 'disabled'
+
+    # GETTING ARGUMENTS
+    arg_fasta = "-f " + "'" + fasta + "'"
+    arg_pdb = " -p " + "'" + pdb + "'"
+
+    if out == "":
+        arg_out= ""
+    else:
+        arg_out = " -o " + out
+
+    if odir == "Output directory (Optional)":
+        arg_odir = ""
+    else:
+        arg_odir = " -od " + "'" + odir + "'"
+
+    if sto == "YES":
+        arg_sto = " -sto " + sto_var
+    elif sto == "INFO":
+        arg_sto = " -stoinfo"
+    else:
+        arg_sto = ""
+
+    if opt == "1":
+        arg_opt = " -z"
+    else:
+        arg_opt = ""
+
+    if random == "1":
+        arg_rd = " -r"
+    else:
+        arg_rd = ""
+
+    if seed != "":
+        arg_seed = " -s " + seed
+    else:
+        arg_seed = ""
+
+    arg_models = " -m " + models
+
+    arg_clash = " -c " + cdist
+
+    arg_func = arg_fasta + arg_pdb + arg_odir + arg_out + arg_sto + arg_opt + arg_rd + arg_seed + arg_models + arg_clash
+
+    os.system("PrediProt " + arg_func)
+
+    # REACTIVATE INPUTS
+    # FASTA
+    upload_fasta['state'] = 'normal'
+
+    # PDB
+    upload_pdb['state'] = 'normal'
+
+    # OUTPUT
+    out_dir_button['state'] = 'normal'
+    output_name_entry.config(state='normal')
+
+    # RUN BUTTON
+    run['state'] = 'normal'
+
+    # RESET BUTTON
+    reset['state'] = 'normal'
+
+    # SAVE/LOAD
+    save_param['state'] = 'normal'
+    load_param['state'] = 'normal'
+
+    # STOICHIOMETRY
+    sto_no['state'] = 'normal'
+    sto_yes['state'] = 'normal'
+    sto_info['state'] = 'normal'
+
+    if sto == 'YES':
+        sto_entry.config(state='normal')
+    else:
+        sto_entry.config(state='disabled')
+
+    # MODELS
+    num_models['state'] = 'normal'
+
+    # RANDOM
+    random_box.config(state='normal')
+
+    # OPTMIZE
+    opt_box['state'] = 'normal'
+
+    # CLASH DISTANCE
+    clash_dist['state'] = 'normal'
+
+    # SEED
+    seed_entry['state'] = 'normal'
+
+def change_frame(selected, hide_1, hide_2):
+    hide_1.pack_forget()
+    hide_2.pack_forget()
+    selected.pack()
+
+def goto_web():
+    webbrowser.open_new(r"https://salilab.org/modeller/download_installation.html")
+
+def load():
+    file = askopenfilename(title="Load saved settings", filetypes=[("PrediProt parameter file",".prediprot")])
+
+    parameter_list = [fasta_label,pdb_label,out_dir_label,sto_var,sto_entry_var,nmod,seed_var,opt_var,rd,clash_var,output_name_var]
+    parameter_index = 0
+
+    if '.prediprot' not in file:
+        return
+
+    f = open(file)
+
+    next(f)
+    for line in f:
+        param = line.rstrip("\n")
+        i = line.find("=")
+        param = param[i+1:]
+        if parameter_index < 3:
+            if param != "":
+                param = get_relpath(param)
+            parameter_list[parameter_index].configure(text=param)
+        else:
+            parameter_list[parameter_index].set(param)
+
+        parameter_index += 1
+
+    f.close()
+
+    if parameter_list[3].get() == 'YES':
+        sto_entry.config(state='normal')
+    else:
+        sto_entry.config(state='disabled')
+
+    if fasta_label.cget("text") == "":
+        fasta_label.configure(text="Upload corresponding FASTA file")
+
+    if pdb_label.cget("text") == "":
+        pdb_label.configure(text="Choose directory with PDB files")
+
+    if out_dir_label.cget("text") == "":
+        out_dir_label.configure(text="Output directory (Optional)")
+
+    check_run()
+
+
+def save(sto_opt,sto_save,nm,sd,optim,rd_save,cdistance,oname):
+    f = asksaveasfile(mode='w', defaultextension=".prediprot")
+    if f is None:
+        return
+    f.write("############# PREDIPROT PARAMETERS #############\n" +
+    "FASTA_PATH=" + fasta_file + "\n" +
+    "PDB_PATH=" + pdb_dir + "\n" +
+    "OUTPUT_PATH=" + output_directory + "\n" +
+    "STOICHIOMETRY_OPTION=" + sto_opt + "\n" +
+    "STOICHIOMETRY=" + sto_save + "\n" +
+    "NUM_MODELS=" + nm + "\n" +
+    "SEED=" + sd + "\n" +
+    "OPTIMIZE=" + optim + "\n" +
+    "RANDOM=" + rd_save + "\n" +
+    "CLASH_DISTANCE=" + cdistance + "\n" +
+    "OUTPUT_NAME=" + oname)
+    f.close()
+
+def open_help():
+    help_win = Toplevel()
+### Help window
+
+    help_win.title("Help menu")
+    #help_win.config(padx="100",pady="100")
+
+    menubar = Menu(help_win, bd="0")
+
+    menubar.add_command(label="Uploads", command=lambda: change_frame(uploads_help_frame, sto_help_frame, extra_help_frame))
+    menubar.add_command(label="Stoichiometry", command=lambda: change_frame(sto_help_frame, extra_help_frame, uploads_help_frame))
+    menubar.add_command(label="Extra Parameters", command=lambda: change_frame(extra_help_frame, uploads_help_frame, sto_help_frame))
+
+    help_win.config(menu=menubar)
+
+    uploads_help_frame = Frame(help_win)
+    uploads_help_text = Text(uploads_help_frame, bd="5", bg="lightgrey", font="cambria", height="20", width="60", wrap="word", state="normal", padx="20", pady="20")
+    uploads_help_text.tag_config("title", font="cambria 14 bold")
+    minitab = " " * 5
+    uploads_help_text.insert(INSERT,"\n\n· FASTA upload:\n", "title")
+    uploads_help_text.insert(INSERT, minitab + "In this input a valid FASTA file corresponding to the sequence\n" + minitab + "must be uploaded. If not\
+     available, PrediProt provides a script that\n" + minitab + "allows to obtain the FASTA sequence through the pdb file. For more\n" + minitab + "info,\
+     see documentation.\n\n")
+    uploads_help_text.insert(INSERT,"· PDB directory:\n", "title")
+    uploads_help_text.insert(INSERT, minitab + "This input requires the path to the directory where all the PDB files are\n" + minitab + "stored.\n\n")
+    uploads_help_text.insert(INSERT,"· Output directory:\n", "title")
+    uploads_help_text.insert(INSERT, minitab + "Output directory, an optional input. By default is the current path\n" + minitab + "where the program is running.")
+    uploads_help_text.config(state="disabled")
+    uploads_help_text.pack()
+    uploads_help_frame.pack()
+
+    sto_help_frame = Frame(help_win)
+    sto_help_text = Text(sto_help_frame, bd="5", bg="lightgrey", font="cambria", height="20", width="60", state="normal", wrap="word", padx="20",pady="20")
+    sto_help_text.tag_config("title", font="cambria 14 bold")
+    sto_help_text.tag_config("note", font="cambria 12 italic")
+    sto_help_text.insert(INSERT,"Use this option in order to tell the program to use a specific stoichiometry.\n\n")
+    sto_help_text.insert(INSERT,"IMPORTANT: If provided, the stoichiometry must be the correct format, as example above entry box shows.\n\n", "note")
+    sto_help_text.insert(INSERT,"· NO:\n","title")
+    sto_help_text.insert(INSERT, minitab + "Default option: No specific stoichiometry will be used to build the\n" + minitab + "model.\n\n")
+    sto_help_text.insert(INSERT,"· YES:\n","title")
+    sto_help_text.insert(INSERT, minitab + "The provided stoichiometry will be used to build the model.\n\n")
+    sto_help_text.insert(INSERT,"· INFO:\n","title")
+    sto_help_text.insert(INSERT, minitab + "The program will create a FASTA with every subunit and then will ask\n"+ minitab + "for input in the terminal.\n\n")
+
+    sto_help_text.config(state="disabled")
+    sto_help_text.pack()
+
+    extra_help_frame = Frame(help_win)
+    extra_help_text = Text(extra_help_frame, bd="5", bg="lightgrey", font="cambria", height="20", width="60", state="normal", wrap="word", padx="20",pady="20")
+    scrollbar = Scrollbar(extra_help_frame, orient=VERTICAL, command=extra_help_text.yview)
+    extra_help_text['yscroll'] = scrollbar.set
+    scrollbar.pack(side="right",fill="y")
+    extra_help_text.tag_config("title", font="cambria 14 bold")
+    extra_help_text.insert(INSERT,"Number of models:\n","title")
+    extra_help_text.insert(INSERT, minitab + "Determines how many models will be built.\n\n")
+    extra_help_text.insert(INSERT,"Seed:\n","title")
+    extra_help_text.insert(INSERT, minitab + "A tool to provide replicability. The text introduced will be used as the\n" + minitab + "'seed' to build the model. If the program is executed again with the\n" + minitab + "same parameters and the same seed, the exact same models will be\n" + minitab + "produced. If left empty, no specific seed will be used. For more info see\n" + minitab + "documentation.\n\n")
+    extra_help_text.insert(INSERT,"Optimize:\n","title")
+    extra_help_text.insert(INSERT, minitab + "An optimizer tool. If checked, modeller will run and optimize the model\n" + minitab + "produced. Additionaly, energy before and after optimization will be\n" + minitab + "available in the .log file.\n" + minitab + "This option requires modeller to be installed. Click the button below to\n" + minitab + "visit its web page.\n\n")
+    modeller_button = Button(extra_help_text, text="Go to modeller's web page", cursor="arrow", padx="5", command=goto_web)
+    extra_help_text.window_create(INSERT, window=modeller_button)
+    extra_help_text.insert(INSERT,"\n\nRandom initial structure:\n","title")
+    extra_help_text.insert(INSERT, minitab + "Option to choose as random the initial structure from which the model\n" + minitab + "will be built. If left empty, the model will use the most interacting\n" + minitab + "structure as the initial template. For more info, see documentation.\n\n")
+    extra_help_text.insert(INSERT,"Clash distance:\n","title")
+    extra_help_text.insert(INSERT, minitab + "Ranging from 0.1 to 1.0 (in Angstrom) it is the distance at which the\n" + minitab + "program considers an interaction a clash.\n\n")
+    extra_help_text.insert(INSERT,"Output name:\n","title")
+    extra_help_text.insert(INSERT, minitab + "As suggested, the name of the file(s) produced. If blank, the output\n" + minitab + "name will be the id of the FASTA file used + '_result.pdb'.\n" + minitab + "Note: Extension is automatic.\n")
+
+    extra_help_text.config(state="disabled")
+    extra_help_text.pack(side="left", fill="both", expand="true")
+
+    help_win.resizable(height=0,width=0)
+    help_win.config(padx="5",pady="5")
+
+    help_win = mainloop()
+
+###
+
+### PDB, FASTA AND OUTPUT FRAME
+
+uploads = LabelFrame(main, padx="30", pady="10")
+
+fasta_label = Label(uploads, text = "Upload corresponding FASTA file", width="40", anchor="w", padx="10")
+fasta_label.grid(column=1,row=1)
+upload_fasta = Button(uploads, text="Browse...", command=input_fasta, padx="10")
+upload_fasta.grid(column=0,row=1)
+
+pdb_label = Label(uploads, text = "Choose directory with PDB files", width="40", anchor="w", padx="10")
+pdb_label.grid(column=1,row=2)
+upload_pdb = Button(uploads, text="Browse...", command=input_pdb, padx="10")
+upload_pdb.grid(column=0,row=2)
+
+out_dir_label = Label(uploads, text = "Output directory (Optional)", width="40", anchor="w", padx="10")
+out_dir_label.grid(column=1,row=3)
+out_dir_button = Button(uploads, text="Browse...", command=output_dir, padx="10")
+out_dir_button.grid(column=0,row=3)
+
+uploads.grid(column=0,row=0)
+
+### STOICHIOMETRY
+
+sto_label = LabelFrame(main, text = "Use specific stoichiometry?", padx="10", pady="10")
+sto_label.grid(column=1,row=0)
+
+sto_entry_frame = LabelFrame(sto_label, bd=0)
+sto_entry_label = Label(sto_entry_frame, text="Format example: A:1,B:1,C:1...", anchor="w", padx="5")
+sto_entry_label.grid(column=0,row=0)
+sto_entry_var = StringVar()
+sto_entry = Entry(sto_entry_frame, textvariable = sto_entry_var, width="25", state="disabled")
+sto_entry.grid(column=0,row=1)
+sto_entry_frame.grid(column=0,row=1)
+
+sto_buttons = LabelFrame(sto_label, bd=0)
+sto_buttons.grid(column=0,row=0)
+sto_var = StringVar()
+sto_var.set("NO")
+
+sto_no = Radiobutton(sto_buttons, text="NO", variable=sto_var, value = "NO", padx="10", pady="10", command = lambda: sto_entry.config(state='disabled'))
+sto_no.grid(column=0,row=0)
+
+sto_yes = Radiobutton(sto_buttons, text="YES", variable=sto_var, value = "YES", padx="10", pady="10", command = lambda: sto_entry.config(state='normal'))
+sto_yes.grid(column=1,row=0)
+
+sto_info = Radiobutton(sto_buttons, text="INFO", variable=sto_var, value = "INFO", padx="10", pady="10", command = lambda: sto_entry.config(state='disabled'))
+sto_info.grid(column=2,row=0)
+
+### EXTRA OPTIONS
+extra = LabelFrame(main, text = "Extra parameters", padx="10", pady="25")
+
+modframe = LabelFrame(extra, bd = "0", pady="10")
+num_models_lbl = Label(modframe, text=" models will be produced", anchor="w", padx="5")
+num_models_lbl.grid(column=2,row=0)
+nmod = StringVar()
+num_models = Entry(modframe, textvariable = nmod, justify="right", width="3")
+num_models.grid(column=1,row=0)
+nmod.set("1")
+modframe.grid(column=0,row=0)
+
+rd = StringVar()
+random_box = Checkbutton(extra, text="Random initial structure", variable=rd, anchor="w", padx="30", state='normal')
+random_box.grid(column=1,row=0)
+rd.set("0")
+
+opt_var = StringVar()
+opt_box = Checkbutton(extra, text="Optimize (Requires modeller)", variable=opt_var, anchor="w")
+opt_box.grid(column=0,row=2)
+opt_var.set("0")
+
+clashframe = LabelFrame(extra, bd = "0", pady="10")
+clash_var = StringVar()
+clash_dist = Spinbox(clashframe, from_=0.1, to=1.0, increment=0.1, width="4", textvariable=clash_var, state='readonly')
+clash_dist.grid(column=1,row=0)
+clash_var.set("0.5")
+clash_lbl = Label(clashframe, text="Clash distance (\u00c5)", padx="10", anchor="w")
+clash_lbl.grid(column=0,row=0)
+clashframe.grid(column=1,row=1)
+
+seedframe = LabelFrame(extra, bd = "0", pady="10")
+seed_lbl = Label(seedframe, text="Seed:", anchor="w", padx="10")
+seed_lbl.grid(column=0,row=0)
+seed_var = StringVar()
+seed_entry = Entry(seedframe, width="18", textvariable=seed_var)
+seed_entry.grid(column=1,row=0)
+seedframe.grid(column=0,row=1)
+
+output_name_frame = LabelFrame(extra, bd=0, pady="10")
+output_name_label = Label(output_name_frame, text="Output name:", padx=5)
+output_name_label.grid(column=0,row=0)
+output_name_var = StringVar()
+output_name_entry = Entry(output_name_frame, width="10", textvariable = output_name_var)
+output_name_var.set("")
+output_name_entry.grid(column=1,row=0)
+output_name_sufix = Label(output_name_frame, text=".pdb")
+output_name_sufix.grid(column=2,row=0)
+output_name_frame.grid(column=1,row=2)
+
+extra.grid(column=0,row=1)
+
+#### BUTTONS FRAME
+buttons = LabelFrame(main, bd = "0")
+run = Button(buttons, text="Run Program", state='disabled', command=lambda: run_program(fasta_label.cget("text"),pdb_label.cget("text"),output_name_var.get(),out_dir_label.cget("text"),sto_var.get(),sto_entry_var.get(),opt_var.get(),rd.get(),seed_var.get(),nmod.get(),clash_var.get()), padx=15,pady=15)
+run.grid(column=0,row=0, sticky="nsew")
+
+load_param = Button(buttons, text="Load Parameters", command=load, padx=15,pady=15)
+load_param.grid(column=0,row=1,sticky="nsew")
+
+reset = Button(buttons, text="Reset parameters", command=reset, padx=15,pady=15)
+reset.grid(column=0,row=2,sticky="nsew")
+
+help = Button(buttons, text="Help", command=open_help, padx=15,pady=15)
+help.grid(column=1,row=0,sticky="nsew")
+
+save_param = Button(buttons, text="Save parameters", command=lambda: save(sto_var.get(), sto_entry_var.get(), num_models.get(),seed_var.get(),opt_var.get(),rd.get(),clash_var.get(),output_name_var.get()))
+#save_param = Button(buttons, text="Save parameters", command=lambda: save(sto_var.get(),sto_entry_var.get(),num_models.get(),seed_var.get(),opt_var.get(),rd.get(),clash_var.get(),output_name_var.get()), padx=15,pady=15)
+save_param.grid(column=1,row=1,sticky="nsew")
+
+quit = Button(buttons, text="Close", command=window.destroy, padx=15,pady=15)
+quit.grid(column=1,row=2,sticky="nsew")
+
+buttons.grid(column=1,row=1)
+
+
+main.pack()
+
+window.resizable(width=0, height=0)
+window.mainloop()
