@@ -1,0 +1,11 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=true
+Exec=/usr/bin/PrediProt_GUI
+Name=PrediProt
+Comment=Protein complex structure predictor
+Icon=/usr/share/icons/Circuit.png
+Categories=Application

@@ -1,0 +1,11 @@
+Name: PrediProt
+Package: PrediProt
+Version: 1.0.16
+Maintainer: The Dream Team
+Architecture: all
+Essential: no
+Priority: optional
+Depends: python3
+Description: Protein complex structure predictor
+ This program builds protein complexes models from diferent PDB
+ files based on interactions between them.
