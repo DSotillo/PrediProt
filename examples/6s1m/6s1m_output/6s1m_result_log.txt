@@ -1,0 +1,13 @@
+File name                          	 Energy of the model	Added subunits
+6s1m_result_1.pdb                  	           27054.941	A:2,F:2
+6s1m_result_2.pdb                  	           79977.305	A:3,F:3
+6s1m_result_3.pdb                  	           79977.305	A:3,F:3
+6s1m_result_4.pdb                  	            3558.081	A:3,B:1,C:1,D:1,E:1,F:1,G:1
+
+The following fasta has been used: 6s1m.fa
+
+The following seed has been used to get this result: seed1
+
+No specific stoichiometry has been selected to get this result 
+
+The models have been constructed from the most interacting structure

@@ -1,0 +1,11 @@
+File name                          	 Energy of the model	Added subunits
+5fj8_result_1.pdb                  	            2526.309	A:1,B:1,C:1,D:1,E:1,F:1,G:1,H:1,I:1,J:1,K:1,L:1,M:1,N:1,O:1,P:1,Q:1,R:1,S:1,T:1
+5fj8_result_1_optimized.pdb        	           21813.205	A:1,B:1,C:1,D:1,E:1,F:1,G:1,H:1,I:1,J:1,K:1,L:1,M:1,N:1,O:1,P:1,Q:1,R:1,S:1,T:1
+
+The following fasta has been used: 5fj8.fa
+
+No specific seed has been used to get this result
+
+No specific stoichiometry has been selected to get this result 
+
+The models have been constructed from the most interacting structure

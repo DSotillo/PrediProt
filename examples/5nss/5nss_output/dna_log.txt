@@ -1,0 +1,10 @@
+File name                          	 Energy of the model	Added subunits
+dna_1.pdb                          	             136.032	F:1,H:1
+
+The following fasta has been used: 5nss.fa
+
+No specific seed has been used to get this result
+
+The following stoichiometry has been selected to get this result: F:1,H:1
+
+The models have been constructed from the most interacting structure

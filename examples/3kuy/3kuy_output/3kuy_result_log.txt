@@ -1,0 +1,11 @@
+File name                          	 Energy of the model	Added subunits
+3kuy_result_1.pdb                  	            1170.460	A:2,B:2,C:2,D:2,E:1,F:1
+3kuy_result_1_optimized.pdb        	            4937.725	A:2,B:2,C:2,D:2,E:1,F:1
+
+The following fasta has been used: 3kuy.fa
+
+No specific seed has been used to get this result
+
+No specific stoichiometry has been selected to get this result 
+
+The models have been constructed from the most interacting structure

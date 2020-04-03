@@ -1,0 +1,11 @@
+File name                          	 Energy of the model	Added subunits
+1avo_result_1.pdb                  	             699.538	A:7,B:7
+1avo_result_1_optimized.pdb        	            5142.158	A:7,B:7
+
+The following fasta has been used: 1avo.fa
+
+No specific seed has been used to get this result
+
+No specific stoichiometry has been selected to get this result 
+
+The models have been constructed from the most interacting structure

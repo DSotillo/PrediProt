@@ -1,0 +1,25 @@
+File name                          	 Energy of the model	Added subunits
+5nss_result_1.pdb                  	          970053.500	A:6,B:2,C:1,D:1,E:1,F:1,G:1,H:1
+5nss_result_1_optimized.pdb        	           35472.723	A:6,B:2,C:1,D:1,E:1,F:1,G:1,H:1
+5nss_result_2.pdb                  	         1134861.875	A:6,B:2,C:1,D:1,E:1,F:1,G:1,H:1
+5nss_result_2_optimized.pdb        	           42913.867	A:6,B:2,C:1,D:1,E:1,F:1,G:1,H:1
+5nss_result_3.pdb                  	          745679.562	A:6,B:2,C:1,D:1,E:1,F:1,G:1,H:1
+5nss_result_3_optimized.pdb        	           35987.742	A:6,B:2,C:1,D:1,E:1,F:1,G:1,H:1
+5nss_result_4.pdb                  	          825572.125	A:6,B:2,C:1,D:1,E:1,F:1,G:1,H:1
+5nss_result_4_optimized.pdb        	           37722.285	A:6,B:2,C:1,D:1,E:1,F:1,G:1,H:1
+5nss_result_5.pdb                  	          880136.812	A:6,B:2,C:1,D:1,E:1,F:1,G:1,H:1
+5nss_result_5_optimized.pdb        	           34100.598	A:6,B:2,C:1,D:1,E:1,F:1,G:1,H:1
+5nss_result_6.pdb                  	          800329.562	A:6,B:2,C:1,D:1,E:1,F:1,G:1,H:1
+5nss_result_6_optimized.pdb        	           35817.215	A:6,B:2,C:1,D:1,E:1,F:1,G:1,H:1
+5nss_result_7.pdb                  	          727451.688	A:6,B:2,C:1,D:1,E:1,F:1,G:1,H:1
+5nss_result_7_optimized.pdb        	           35333.500	A:6,B:2,C:1,D:1,E:1,F:1,G:1,H:1
+5nss_result_8.pdb                  	         1107563.875	A:6,B:2,C:1,D:1,E:1,F:1,G:1,H:1
+5nss_result_8_optimized.pdb        	           36090.250	A:6,B:2,C:1,D:1,E:1,F:1,G:1,H:1
+
+The following fasta has been used: 5nss.fa
+
+The following seed has been used to get this result: seed1
+
+The following stoichiometry has been selected to get this result: A:6,B:2,C:1,D:1,E:1,F:1,G:1,H:1
+
+The models have been constructed from the most interacting structure

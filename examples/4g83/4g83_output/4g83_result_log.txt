@@ -1,0 +1,11 @@
+File name                          	 Energy of the model	Added subunits
+4g83_result_1.pdb                  	             999.364	A:2,B:2
+4g83_result_1_optimized.pdb        	            1849.169	A:2,B:2
+
+The following fasta has been used: 4g83.fa
+
+No specific seed has been used to get this result
+
+No specific stoichiometry has been selected to get this result 
+
+The models have been constructed from the most interacting structure
